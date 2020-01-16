@@ -97,15 +97,15 @@ defmodule HomeFries.Location do
   @spec lookup_num(integer()) :: String.t()
   defp lookup_num(num), do: Map.fetch!(@lookup, num)
 
-  defp combine_digits({a, b}) when length(a) == length(b), do: merge(a, b, [])
-  defp combine_digits({a, b}), do: merge(b, a, [])
+  defp combine_digits({a, b}) when length(b) > length(a), do: combine_digits({b, a})
 
-  defp merge(a, b, acc) do
-    case {a, b} do
-      {[x | xs], [y | ys]} -> merge(xs, ys, [y | [x | acc]])
-      {[x], []} -> [x | acc]
-      _ -> acc
-    end
+  defp combine_digits({a, b}) do
+    Stream.unfold({a, b}, fn
+      {[x | xs], [y | ys]} -> {[x, y], {xs, ys}}
+      {[x], []} -> {[x], {[], []}}
+      {[], []} -> nil
+    end)
+    |> Enum.concat()
   end
 
   defp to_binary_lists(%HomeFries.Location{latitude: latitude, longitude: longitude}, precision) do
@@ -128,7 +128,7 @@ defmodule HomeFries.Location do
       {{_min, mid, max}, p} ->
         {1, {{mid, (mid + max) / 2, max}, p - 1}}
     end)
-    |> Enum.reverse()
+    |> Enum.to_list()
   end
 
   @spec is_latitude(float()) :: bool()

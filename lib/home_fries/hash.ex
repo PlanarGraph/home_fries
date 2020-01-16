@@ -78,6 +78,8 @@ defmodule HomeFries.Hash do
   @doc since: "0.1.0"
   @spec to_location(HomeFries.Hash.t()) :: HomeFries.Location.t()
   def to_location(%HomeFries.Hash{hash: hash}) do
+    hash_len = String.length(hash)
+
     hash
     # Get the codepoints of the hash.
     |> String.codepoints()
@@ -85,22 +87,21 @@ defmodule HomeFries.Hash do
     |> Enum.flat_map(&to_binary/1)
     # Index each bit.
     |> Enum.with_index()
-    # Reverse the list to build the even and odd bit lists with O(1) prepends.
-    |> Enum.reverse()
     # Split the list into even indexed bits and odd indexed bits.
-    |> Enum.reduce({[], []}, fn
+    |> List.foldr({[], []}, fn
       {b, i}, {evens, odds} when rem(i, 2) == 0 -> {[b | evens], odds}
       {b, i}, {evens, odds} when rem(i, 2) == 1 -> {evens, [b | odds]}
     end)
     # Convert the bit strings into latitude and longitude coordinates.
-    |> from_bits()
+    |> from_bits(hash_len)
     # Use the location module to verify and create a Location struct.
     |> HomeFries.Location.from_pair()
   end
 
-  defp from_bits({longitude, latitude}) do
-    lat = from_bits(latitude, {-90.0, 0.0, 90.0})
-    lon = from_bits(longitude, {-180.0, 0.0, 180.0})
+  defp from_bits({longitude, latitude}, hash_length) do
+    {lat_pre, lon_pre} = get_precision(hash_length - 1)
+    lat = from_bits(latitude, {-90.0, 0.0, 90.0}) |> Float.round(lat_pre)
+    lon = from_bits(longitude, {-180.0, 0.0, 180.0}) |> Float.round(lon_pre)
 
     {lat, lon}
   end
@@ -112,11 +113,16 @@ defmodule HomeFries.Hash do
         1, {_min, mid, max} -> {mid, (mid + max) / 2, max}
       end)
 
-    # mid
-    Float.round(mid, 5)
-    # rounded = Float.round(mid, 5)
+    mid
+  end
 
-    # if rounded < min or rounded > max, do: Float.round(mid, 4), else: rounded
+  # To get the precision for the latitude and longitude from the hash length.
+  defp get_precision(num) do
+    Stream.unfold(0, fn
+      x -> {[{x, x}, {x + 1, x + 1}, {x + 2, x + 2}, {x + 3, x + 2}], x + 3}
+    end)
+    |> Enum.at(div(num, 4))
+    |> Enum.at(rem(num, 4))
   end
 
   defp to_binary(s) do

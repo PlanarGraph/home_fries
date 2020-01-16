@@ -15,7 +15,7 @@ defmodule HomeFriesTest do
   end
 
   test "Can convert hash to location" do
-    assert %Location{latitude: 57.64911, longitude: 10.40744} ==
+    assert %Location{latitude: 57.64911063, longitude: 10.40743969} ==
              Hash.to_location(%Hash{hash: "u4pruydqqvj"})
   end
 end
