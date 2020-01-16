@@ -104,9 +104,10 @@ defmodule HomeFries.Hash do
         1, {_min, mid, max} -> {mid, (mid + max) / 2, max}
       end)
 
-    rounded = Float.round(mid, 3)
+    mid
+    # rounded = Float.round(mid, 3)
 
-    if rounded < min or rounded > max, do: Float.round(mid, 4), else: rounded
+    # if rounded < min or rounded > max, do: Float.round(mid, 4), else: rounded
   end
 
   @spec digits(String.t()) :: {[integer()], [integer()]}

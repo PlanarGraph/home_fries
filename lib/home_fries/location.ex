@@ -11,6 +11,41 @@ defmodule HomeFries.Location do
 
   @type t :: %__MODULE__{latitude: float(), longitude: float()}
 
+  @lookup %{
+    0 => "0",
+    1 => "1",
+    2 => "2",
+    3 => "3",
+    4 => "4",
+    5 => "5",
+    6 => "6",
+    7 => "7",
+    8 => "8",
+    9 => "9",
+    10 => "b",
+    11 => "c",
+    12 => "d",
+    13 => "e",
+    14 => "f",
+    15 => "g",
+    16 => "h",
+    17 => "j",
+    18 => "k",
+    19 => "m",
+    20 => "n",
+    21 => "p",
+    22 => "q",
+    23 => "r",
+    24 => "s",
+    25 => "t",
+    26 => "u",
+    27 => "v",
+    28 => "w",
+    29 => "x",
+    30 => "y",
+    31 => "z"
+  }
+
   @doc """
   Creates a `Location` struct from a valid string.
 
@@ -35,6 +70,72 @@ defmodule HomeFries.Location do
       [{latitude, ""}, {longitude, ""}] -> from_floats(latitude, longitude)
       _ -> nil
     end
+  end
+
+  @doc """
+  Converts a `Location` struct to a `Hash` struct using the Geohash
+  algorithm.
+
+  Always returns a `Hash` of the given `Location`.
+  """
+  @doc since: "0.1.0"
+  @spec to_hash(HomeFries.Location.t(), integer) :: HomeFries.Hash.t()
+  def to_hash(%HomeFries.Location{latitude: latitude, longitude: longitude}, precision) do
+    alias HomeFries.Hash
+
+    latpre = floor(precision * 5 / 2)
+    longpre = ceil(precision * 5 / 2)
+    latbin = to_binary(latitude, :latitude, latpre)
+    longbin = to_binary(longitude, :longitude, longpre)
+
+    binary_string =
+      if rem(precision, 2) == 0 do
+        combine_digits(Enum.reverse(latbin), Enum.reverse(longbin), [])
+      else
+        combine_digits(Enum.reverse(longbin), Enum.reverse(latbin), [])
+      end
+
+    hash =
+      binary_string
+      |> Enum.chunk_every(5)
+      |> Enum.map_join(&(Integer.undigits(&1, 2) |> lookup_num()))
+
+    %Hash{hash: hash}
+  end
+
+  @spec lookup_num(integer()) :: String.t()
+  defp lookup_num(num) do
+    Map.fetch!(@lookup, num)
+  end
+
+  @spec combine_digits([any()], [any()], [any()]) :: [any()]
+  defp combine_digits(a, b, acc) do
+    case {a, b} do
+      {[x | xs], [y | ys]} -> combine_digits(xs, ys, [y | [x | acc]])
+      {[x], []} -> [x | acc]
+      _ -> acc
+    end
+  end
+
+  defp to_binary(dec, :latitude, precision) do
+    to_binary(dec, {-90.0, 0, 90.0}, precision)
+  end
+
+  defp to_binary(dec, :longitude, precision) do
+    to_binary(dec, {-180.0, 0, 180.0}, precision)
+  end
+
+  defp to_binary(dec, vals, precision) do
+    Stream.unfold({vals, precision}, fn
+      {_, 0} ->
+        nil
+
+      {{min, mid, _max}, p} when min <= dec and dec <= mid ->
+        {0, {{min, (min + mid) / 2, mid}, p - 1}}
+
+      {{_min, mid, max}, p} ->
+        {1, {{mid, (mid + max) / 2, max}, p - 1}}
+    end)
   end
 
   @spec is_latitude(float()) :: bool()
