@@ -80,52 +80,44 @@ defmodule HomeFries.Location do
   """
   @doc since: "0.1.0"
   @spec to_hash(HomeFries.Location.t(), integer) :: HomeFries.Hash.t()
-  def to_hash(%HomeFries.Location{latitude: latitude, longitude: longitude}, precision) do
-    alias HomeFries.Hash
-
-    latpre = floor(precision * 5 / 2)
-    longpre = ceil(precision * 5 / 2)
-    latbin = to_binary(latitude, :latitude, latpre)
-    longbin = to_binary(longitude, :longitude, longpre)
-
-    binary_string =
-      if rem(precision, 2) == 0 do
-        combine_digits(Enum.reverse(latbin), Enum.reverse(longbin), [])
-      else
-        combine_digits(Enum.reverse(longbin), Enum.reverse(latbin), [])
-      end
-
-    hash =
-      binary_string
-      |> Enum.chunk_every(5)
-      |> Enum.map_join(&(Integer.undigits(&1, 2) |> lookup_num()))
-
-    %Hash{hash: hash}
+  def to_hash(location, precision) do
+    location
+    # Convert latitude and longitude to binary strings.
+    |> to_binary_lists(precision)
+    # Intersperse their digits.
+    |> combine_digits()
+    # Group every 5 bits.
+    |> Enum.chunk_every(5)
+    # Convert to appropriate hash values.
+    |> Enum.map_join(&(Integer.undigits(&1, 2) |> lookup_num))
+    # Validate with hash struct.
+    |> HomeFries.Hash.from_string()
   end
 
   @spec lookup_num(integer()) :: String.t()
-  defp lookup_num(num) do
-    Map.fetch!(@lookup, num)
-  end
+  defp lookup_num(num), do: Map.fetch!(@lookup, num)
 
-  @spec combine_digits([any()], [any()], [any()]) :: [any()]
-  defp combine_digits(a, b, acc) do
+  defp combine_digits({a, b}) when length(a) == length(b), do: merge(a, b, [])
+  defp combine_digits({a, b}), do: merge(b, a, [])
+
+  defp merge(a, b, acc) do
     case {a, b} do
-      {[x | xs], [y | ys]} -> combine_digits(xs, ys, [y | [x | acc]])
+      {[x | xs], [y | ys]} -> merge(xs, ys, [y | [x | acc]])
       {[x], []} -> [x | acc]
       _ -> acc
     end
   end
 
-  defp to_binary(dec, :latitude, precision) do
-    to_binary(dec, {-90.0, 0, 90.0}, precision)
+  defp to_binary_lists(%HomeFries.Location{latitude: latitude, longitude: longitude}, precision) do
+    lat_pre = floor(precision * 5 / 2)
+    lon_pre = ceil(precision * 5 / 2)
+    lat_binary = to_binary_lists(latitude, {-90.0, 0.0, 90.0}, lat_pre)
+    lon_binary = to_binary_lists(longitude, {-180.0, 0.0, 180.0}, lon_pre)
+
+    {lat_binary, lon_binary}
   end
 
-  defp to_binary(dec, :longitude, precision) do
-    to_binary(dec, {-180.0, 0, 180.0}, precision)
-  end
-
-  defp to_binary(dec, vals, precision) do
+  defp to_binary_lists(dec, vals, precision) do
     Stream.unfold({vals, precision}, fn
       {_, 0} ->
         nil
@@ -136,6 +128,7 @@ defmodule HomeFries.Location do
       {{_min, mid, max}, p} ->
         {1, {{mid, (mid + max) / 2, max}, p - 1}}
     end)
+    |> Enum.reverse()
   end
 
   @spec is_latitude(float()) :: bool()
@@ -161,4 +154,9 @@ defmodule HomeFries.Location do
   end
 
   def from_floats(_, _), do: nil
+
+  @spec from_pair({float, float}) :: nil | HomeFries.Location.t()
+  def from_pair({latitude, longitude}) do
+    from_floats(latitude, longitude)
+  end
 end

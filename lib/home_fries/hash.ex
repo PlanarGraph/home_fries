@@ -78,27 +78,35 @@ defmodule HomeFries.Hash do
   @doc since: "0.1.0"
   @spec to_location(HomeFries.Hash.t()) :: HomeFries.Location.t()
   def to_location(%HomeFries.Hash{hash: hash}) do
-    alias HomeFries.Location
-
-    {londigits, latdigits} = digits(hash)
-
-    %Location{
-      latitude: from_binary(latdigits, :latitude),
-      longitude: from_binary(londigits, :longitude)
-    }
+    hash
+    # Get the codepoints of the hash.
+    |> String.codepoints()
+    # Convert characters to their binary representation and join the lists.
+    |> Enum.flat_map(&to_binary/1)
+    # Index each bit.
+    |> Enum.with_index()
+    # Reverse the list to build the even and odd bit lists with O(1) prepends.
+    |> Enum.reverse()
+    # Split the list into even indexed bits and odd indexed bits.
+    |> Enum.reduce({[], []}, fn
+      {b, i}, {evens, odds} when rem(i, 2) == 0 -> {[b | evens], odds}
+      {b, i}, {evens, odds} when rem(i, 2) == 1 -> {evens, [b | odds]}
+    end)
+    # Convert the bit strings into latitude and longitude coordinates.
+    |> from_bits()
+    # Use the location module to verify and create a Location struct.
+    |> HomeFries.Location.from_pair()
   end
 
-  @spec from_binary([integer()], :latitude | :longitude | {float(), float(), float()}) :: float()
-  defp from_binary(digits, :latitude) do
-    from_binary(digits, {-90.0, 0.0, 90.0})
+  defp from_bits({latitude, longitude}) do
+    lat = from_bits(latitude, {-90.0, 0.0, 90.0})
+    lon = from_bits(longitude, {-180.0, 0.0, 180.0})
+
+    {lat, lon}
   end
 
-  defp from_binary(digits, :longitude) do
-    from_binary(digits, {-180.0, 0.0, 180.0})
-  end
-
-  defp from_binary(digits, tuple) do
-    {min, mid, max} =
+  defp from_bits(digits, tuple) do
+    {_min, mid, _max} =
       Enum.reduce(digits, tuple, fn
         0, {min, mid, _max} -> {min, (min + mid) / 2, mid}
         1, {_min, mid, max} -> {mid, (mid + max) / 2, max}
@@ -110,17 +118,14 @@ defmodule HomeFries.Hash do
     # if rounded < min or rounded > max, do: Float.round(mid, 4), else: rounded
   end
 
-  @spec digits(String.t()) :: {[integer()], [integer()]}
-  defp digits(hash) do
-    hash
-    |> String.codepoints()
-    |> Enum.flat_map(&(lookup_char(&1) |> Integer.digits(2) |> pad_width()))
-    |> Enum.with_index()
-    |> Enum.reverse()
-    |> Enum.reduce({[], []}, fn
-      {b, i}, {e, o} when rem(i, 2) == 0 -> {[b | e], o}
-      {b, i}, {e, o} when rem(i, 2) == 1 -> {e, [b | o]}
-    end)
+  defp to_binary(s) do
+    s
+    # Lookup the character conversion in the lookup table.
+    |> lookup_char()
+    # Convert the integer to its binary representation.
+    |> Integer.digits(2)
+    # Pad the binary list to 5 bits.
+    |> pad_width()
   end
 
   @spec pad_width([integer()]) :: [integer()]
