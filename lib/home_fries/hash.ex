@@ -98,7 +98,7 @@ defmodule HomeFries.Hash do
     |> HomeFries.Location.from_pair()
   end
 
-  defp from_bits({latitude, longitude}) do
+  defp from_bits({longitude, latitude}) do
     lat = from_bits(latitude, {-90.0, 0.0, 90.0})
     lon = from_bits(longitude, {-180.0, 0.0, 180.0})
 
@@ -112,8 +112,9 @@ defmodule HomeFries.Hash do
         1, {_min, mid, max} -> {mid, (mid + max) / 2, max}
       end)
 
-    mid
-    # rounded = Float.round(mid, 3)
+    # mid
+    Float.round(mid, 5)
+    # rounded = Float.round(mid, 5)
 
     # if rounded < min or rounded > max, do: Float.round(mid, 4), else: rounded
   end
