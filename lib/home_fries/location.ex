@@ -137,10 +137,12 @@ defmodule HomeFries.Location do
   end
 
   @spec is_latitude(float()) :: bool()
-  defguardp is_latitude(latitude) when latitude >= -90.0 and latitude <= 90.0
+  defguardp is_latitude(latitude)
+            when is_float(latitude) and latitude >= -90.0 and latitude <= 90.0
 
   @spec is_longitude(float()) :: bool()
-  defguardp is_longitude(longitude) when longitude >= -180.0 and longitude <= 180.0
+  defguardp is_longitude(longitude)
+            when is_float(longitude) and longitude >= -180.0 and longitude <= 180.0
 
   @doc """
   Creates a `Location` struct from a pair of floats.
@@ -153,7 +155,7 @@ defmodule HomeFries.Location do
   Returns a `Location` if the two floats are valid, or `nil` otherwise.
   """
   @doc since: "0.1.0"
-  @spec from_floats(float(), float()) :: nil | HomeFries.Location.t()
+  @spec from_floats(float, float) :: nil | HomeFries.Location.t()
   def from_floats(latitude, longitude) when is_latitude(latitude) and is_longitude(longitude) do
     %HomeFries.Location{latitude: latitude, longitude: longitude}
   end

@@ -35,46 +35,25 @@ defmodule HomeFries do
   or `nil` if the input is invalid.
 
   ## Examples
-    iex> HomeFries.location_to_hash("57.64911, 10.40744")
+    iex> HomeFries.location_to_hash("57.64911, 10.40744", 11)
     "u4pruydqqvj"
 
-    iex> HomeFries.location_to_hash({57.64911, 10.40744})
+    iex> HomeFries.location_to_hash({57.64911, 10.40744}, 11)
     "u4pruydqqvj"
   """
   @doc since: "0.1.0"
-  @spec location_to_hash(binary | {float, float}) :: nil | String.t()
-  def location_to_hash(input) when is_binary(input) do
-    case Location.from_string(input) do
+  @spec location_to_hash(binary | {float, float}, integer) :: nil | String.t()
+  def location_to_hash(input, precision \\ 12) do
+    location =
+      cond do
+        is_binary(input) -> Location.from_string(input)
+        is_tuple(input) -> Location.from_pair(input)
+        true -> nil
+      end
+
+    case location do
       nil -> nil
-      location -> location |> Location.to_hash(11) |> Hash.to_string()
+      _ -> location |> Location.to_hash(precision) |> Hash.to_string()
     end
   end
-
-  def location_to_hash(input) when is_tuple(input) do
-    case Location.from_pair(input) do
-      nil -> nil
-      location -> location |> Location.to_hash(11) |> Hash.to_string()
-    end
-  end
-
-  def location_to_hash(_), do: nil
-
-  @doc """
-  Converts a location given as a pair of floats to a geohash. Location
-  values should be ordered such that latitude preceeds longitude.
-
-  Returns a string containing the geohash of the given coordinates
-  or `nil` if the input is invalid.
-
-  ## Examples
-  iex> HomeFries.location_to_hash(57.64911, 10.40744)
-  "u4pruydqqvj"
-  """
-  @doc since: "0.1.0"
-  @spec location_to_hash(float, float) :: nil | String.t()
-  def location_to_hash(latitude, longitude) when is_float(latitude) and is_float(longitude) do
-    location_to_hash({latitude, longitude})
-  end
-
-  def location_to_hash(_, _), do: nil
 end
