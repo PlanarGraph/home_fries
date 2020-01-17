@@ -21,7 +21,13 @@ defmodule HomeFries do
   @doc since: "0.1.0"
   @spec hash_to_location(String.t()) :: nil | String.t()
   def hash_to_location(input) do
-    case Hash.from_string(input) do
+    hash =
+      cond do
+        is_binary(input) -> Hash.from_string(input)
+        true -> nil
+      end
+
+    case hash do
       nil -> nil
       hash -> hash |> Hash.to_location() |> Location.to_string()
     end
