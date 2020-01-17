@@ -13,6 +13,10 @@ defmodule HomeFries do
 
   Returns a string containing the latitude and longitude of
   the geohash or `nil` if the input string is invalid.
+
+  ## Examples
+    iex> HomeFries.hash_to_location("u4pruydqqvj")
+    "57.64911063, 10.40743969"
   """
   @doc since: "0.1.0"
   @spec hash_to_location(String.t()) :: nil | String.t()
@@ -29,6 +33,13 @@ defmodule HomeFries do
 
   Returns a string containing the geohash of the given coordinates
   or `nil` if the input is invalid.
+
+  ## Examples
+    iex> HomeFries.location_to_hash("57.64911, 10.40744")
+    "u4pruydqqvj"
+
+    iex> HomeFries.location_to_hash({57.64911, 10.40744})
+    "u4pruydqqvj"
   """
   @doc since: "0.1.0"
   @spec location_to_hash(binary | {float, float}) :: nil | String.t()
@@ -54,6 +65,10 @@ defmodule HomeFries do
 
   Returns a string containing the geohash of the given coordinates
   or `nil` if the input is invalid.
+
+  ## Examples
+  iex> HomeFries.location_to_hash(57.64911, 10.40744)
+  "u4pruydqqvj"
   """
   @doc since: "0.1.0"
   @spec location_to_hash(float, float) :: nil | String.t()
