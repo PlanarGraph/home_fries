@@ -2,10 +2,6 @@ defmodule HomeFriesTest do
   use ExUnit.Case
   doctest HomeFries
 
-  test "greets the world" do
-    assert HomeFries.hello() == :world
-  end
-
   alias HomeFries.Location
   alias HomeFries.Hash
 
@@ -17,5 +13,21 @@ defmodule HomeFriesTest do
   test "Can convert hash to location" do
     assert %Location{latitude: 57.64911063, longitude: 10.40743969} ==
              Hash.to_location(%Hash{hash: "u4pruydqqvj"})
+  end
+
+  test "Api can convert location string to hash" do
+    assert HomeFries.location_to_hash("57.64911, 10.40744") == "u4pruydqqvj"
+  end
+
+  test "Api can convert location tuple to hash" do
+    assert HomeFries.location_to_hash({57.64911, 10.40744}) == "u4pruydqqvj"
+  end
+
+  test "Api can convert location float pair to hash" do
+    assert HomeFries.location_to_hash(57.64911, 10.40744) == "u4pruydqqvj"
+  end
+
+  test "Api can convert hash to location pair" do
+    assert HomeFries.hash_to_location("u4pruydqqvj") == "57.64911063, 10.40743969"
   end
 end

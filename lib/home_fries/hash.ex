@@ -78,8 +78,6 @@ defmodule HomeFries.Hash do
   @doc since: "0.1.0"
   @spec to_location(HomeFries.Hash.t()) :: HomeFries.Location.t()
   def to_location(%HomeFries.Hash{hash: hash}) do
-    hash_len = String.length(hash)
-
     hash
     # Get the codepoints of the hash.
     |> String.codepoints()
@@ -93,7 +91,7 @@ defmodule HomeFries.Hash do
       {b, i}, {evens, odds} when rem(i, 2) == 1 -> {evens, [b | odds]}
     end)
     # Convert the bit strings into latitude and longitude coordinates.
-    |> from_bits(hash_len)
+    |> from_bits(String.length(hash))
     # Use the location module to verify and create a Location struct.
     |> HomeFries.Location.from_pair()
   end

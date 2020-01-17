@@ -46,6 +46,11 @@ defmodule HomeFries.Location do
     31 => "z"
   }
 
+  @spec to_string(HomeFries.Location.t()) :: String.t()
+  def to_string(%HomeFries.Location{latitude: latitude, longitude: longitude}) do
+    "#{latitude}, #{longitude}"
+  end
+
   @doc """
   Creates a `Location` struct from a valid string.
 
