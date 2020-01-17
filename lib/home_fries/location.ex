@@ -102,13 +102,12 @@ defmodule HomeFries.Location do
   @spec lookup_num(integer()) :: String.t()
   defp lookup_num(num), do: Map.fetch!(@lookup, num)
 
-  defp combine_digits({a, b}) when length(b) > length(a), do: combine_digits({b, a})
-
-  defp combine_digits({a, b}) do
-    Stream.unfold({a, b}, fn
+  defp combine_digits(binary_lists) do
+    binary_lists
+    |> Stream.unfold(fn
       {[x | xs], [y | ys]} -> {[x, y], {xs, ys}}
       {[x], []} -> {[x], {[], []}}
-      {[], []} -> nil
+      _ -> nil
     end)
     |> Enum.concat()
   end
@@ -119,7 +118,7 @@ defmodule HomeFries.Location do
     lat_binary = to_binary_lists(latitude, {-90.0, 0.0, 90.0}, lat_pre)
     lon_binary = to_binary_lists(longitude, {-180.0, 0.0, 180.0}, lon_pre)
 
-    {lat_binary, lon_binary}
+    {lon_binary, lat_binary}
   end
 
   defp to_binary_lists(dec, vals, precision) do
