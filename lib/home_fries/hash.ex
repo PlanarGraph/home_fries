@@ -146,7 +146,6 @@ defmodule HomeFries.Hash do
   @spec is_valid?(String.t()) :: bool()
   defp is_valid?(str) do
     str
-    |> String.codepoints()
-    |> Enum.all?(&String.contains?("0123456789bcdefghjkmnpqrstuvwxyz", &1))
+    |> String.match?(~r/^([0-9]|[b-h]|[j-k]|[m-n]|[p-z]){1,12}$/)
   end
 end
