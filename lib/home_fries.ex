@@ -48,8 +48,8 @@ defmodule HomeFries do
     "u4pruydqqvj"
   """
   @doc since: "0.1.0"
-  @spec location_to_hash(binary | {float, float}, integer) :: nil | String.t()
-  def location_to_hash(input, precision \\ 12) do
+  @spec location_to_hash(binary | {float, float}, integer | nil) :: nil | String.t()
+  def location_to_hash(input, precision \\ nil) do
     location =
       cond do
         is_binary(input) -> Location.from_string(input)
@@ -57,9 +57,38 @@ defmodule HomeFries do
         true -> nil
       end
 
-    case location do
-      nil -> nil
-      _ -> location |> Location.to_hash(precision) |> Hash.to_string()
+    case {location, precision} do
+      {nil, _} ->
+        nil
+
+      # When no precision is given, converge until a sufficient value is found.
+      {_, nil} ->
+        lat_pre = get_precision(location.latitude)
+        lon_pre = get_precision(location.longitude)
+
+        1..12
+        |> Stream.map(&(location |> Location.to_hash(&1)))
+        |> Enum.find(fn hash ->
+          hash_location = hash |> Hash.to_location()
+          hash_lat = Float.round(hash_location.latitude, lat_pre)
+          hash_lon = Float.round(hash_location.longitude, lon_pre)
+
+          %Location{latitude: hash_lat, longitude: hash_lon} == location
+        end)
+
+      _ ->
+        location
+        |> Location.to_hash(precision)
+        |> Hash.to_string()
     end
+  end
+
+  defp get_precision(x) do
+    x
+    |> Float.to_string()
+    |> String.split(".")
+    |> tl()
+    |> hd()
+    |> String.length()
   end
 end
