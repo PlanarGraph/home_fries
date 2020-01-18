@@ -90,7 +90,7 @@ defmodule HomeFries.Location do
     # Convert latitude and longitude to binary strings.
     |> to_binary_lists(precision)
     # Intersperse their digits.
-    |> combine_digits()
+    |> intersperse_digits()
     # Group every 5 bits.
     |> Enum.chunk_every(5)
     # Convert to appropriate hash values.
@@ -102,7 +102,7 @@ defmodule HomeFries.Location do
   @spec lookup_num(integer()) :: String.t()
   defp lookup_num(num), do: Map.fetch!(@lookup, num)
 
-  defp combine_digits(binary_lists) do
+  defp intersperse_digits(binary_lists) do
     binary_lists
     |> Stream.unfold(fn
       {[x | xs], [y | ys]} -> {[x, y], {xs, ys}}
