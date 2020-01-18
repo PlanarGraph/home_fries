@@ -94,7 +94,7 @@ defmodule HomeFries.Location do
     # Group every 5 bits.
     |> Enum.chunk_every(5)
     # Convert to appropriate hash values.
-    |> Enum.map_join(&(Integer.undigits(&1, 2) |> lookup_num))
+    |> Enum.map_join(&(Integer.undigits(&1, 2) |> lookup_num()))
     # Validate with hash struct.
     |> HomeFries.Hash.from_string()
   end
@@ -115,13 +115,13 @@ defmodule HomeFries.Location do
   defp to_binary_lists(%HomeFries.Location{latitude: latitude, longitude: longitude}, precision) do
     lat_pre = floor(precision * 5 / 2)
     lon_pre = ceil(precision * 5 / 2)
-    lat_binary = to_binary_lists(latitude, {-90.0, 0.0, 90.0}, lat_pre)
-    lon_binary = to_binary_lists(longitude, {-180.0, 0.0, 180.0}, lon_pre)
+    lat_binary = float_to_binary(latitude, {-90.0, 0.0, 90.0}, lat_pre)
+    lon_binary = float_to_binary(longitude, {-180.0, 0.0, 180.0}, lon_pre)
 
     {lon_binary, lat_binary}
   end
 
-  defp to_binary_lists(dec, vals, precision) do
+  defp float_to_binary(dec, vals, precision) do
     Stream.unfold({vals, precision}, fn
       {_, 0} ->
         nil
