@@ -15,12 +15,12 @@ defmodule HomeFries do
   the geohash or `nil` if the input string is invalid.
 
   ## Examples
-      iex> HomeFries.hash_to_location("u4pruydqqvj")
+      iex> HomeFries.decode("u4pruydqqvj")
       "57.64911063, 10.40743969"
   """
   @doc since: "0.1.0"
-  @spec hash_to_location(String.t()) :: nil | String.t()
-  def hash_to_location(input) do
+  @spec decode(String.t()) :: nil | String.t()
+  def decode(input) do
     hash =
       cond do
         is_binary(input) -> Hash.from_string(input)
@@ -41,15 +41,15 @@ defmodule HomeFries do
   or `nil` if the input is invalid.
 
   ## Examples
-      iex> HomeFries.location_to_hash("57.64911, 10.40744", 11)
+      iex> HomeFries.encode("57.64911, 10.40744", 11)
       "u4pruydqqvj"
 
-      iex> HomeFries.location_to_hash({57.64911, 10.40744}, 11)
+      iex> HomeFries.encode({57.64911, 10.40744}, 11)
       "u4pruydqqvj"
   """
   @doc since: "0.1.0"
-  @spec location_to_hash(binary | {float, float}, integer | nil) :: nil | String.t()
-  def location_to_hash(input, precision \\ nil) do
+  @spec encode(binary | {float, float}, integer | nil) :: nil | String.t()
+  def encode(input, precision \\ nil) do
     location =
       cond do
         is_binary(input) -> Location.from_string(input)

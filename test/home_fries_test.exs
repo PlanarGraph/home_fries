@@ -16,14 +16,14 @@ defmodule HomeFriesTest do
   end
 
   test "Api can convert location string to hash" do
-    assert HomeFries.location_to_hash("57.64911, 10.40744", 11) == "u4pruydqqvj"
+    assert HomeFries.encode("57.64911, 10.40744", 11) == "u4pruydqqvj"
   end
 
   test "Api can convert location tuple to hash" do
-    assert HomeFries.location_to_hash({57.64911, 10.40744}, 11) == "u4pruydqqvj"
+    assert HomeFries.encode({57.64911, 10.40744}, 11) == "u4pruydqqvj"
   end
 
   test "Api can convert hash to location pair" do
-    assert HomeFries.hash_to_location("u4pruydqqvj") == "57.64911063, 10.40743969"
+    assert HomeFries.decode("u4pruydqqvj") == "57.64911063, 10.40743969"
   end
 end
